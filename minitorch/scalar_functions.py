@@ -103,13 +103,37 @@ class Mul(ScalarFunction):
 
     @staticmethod
     def forward(ctx: Context, a: float, b: float) -> float:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Compute a * b.
+
+        Saves a and b for the backward pass.
+
+        Args:
+            ctx: Context used to save inputs.
+            a: Left operand.
+            b: Right operand.
+
+        Returns:
+            a * b.
+        """
+        ctx.save_for_backward(a, b)
+        return float(operators.mul(a, b))
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, float]:
-        # TODO: Implement for Task 1.4.
-        raise NotImplementedError("Need to implement for Task 1.4")
+        """
+        Backprop for multiplication.
+
+        Args:
+            ctx: Context containing saved (a, b).
+            d_output: Upstream gradient.
+
+        Returns:
+            (d_output * b, d_output * a).
+        """
+        a, b = ctx.saved_values
+        # d/d(a) (a*b) = b,  d/d(b) (a*b) = a
+        return d_output * b, d_output * a
 
 
 class Inv(ScalarFunction):
@@ -117,13 +141,36 @@ class Inv(ScalarFunction):
 
     @staticmethod
     def forward(ctx: Context, a: float) -> float:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Compute 1 / a.
+
+        Saves a for the backward pass.
+
+        Args:
+            ctx: Context used to save a.
+            a: Input value.
+
+        Returns:
+            1.0 / a.
+        """
+        ctx.save_for_backward(a)
+        return float(operators.inv(a))
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
-        # TODO: Implement for Task 1.4.
-        raise NotImplementedError("Need to implement for Task 1.4")
+        """
+        Backprop for reciprocal.
+
+        Args:
+            ctx: Context containing saved input a.
+            d_output: Upstream gradient.
+
+        Returns:
+            d_output * (-1 / a^2).
+        """
+        (a,) = ctx.saved_values
+        # d/d(a) (1/a) = -1/a^2 -> inv_back(a, d_output)
+        return operators.inv_back(a, d_output)
 
 
 class Neg(ScalarFunction):
@@ -131,13 +178,32 @@ class Neg(ScalarFunction):
 
     @staticmethod
     def forward(ctx: Context, a: float) -> float:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Compute -a.
+
+        Args:
+            ctx: Context (unused).
+            a: Input value.
+
+        Returns:
+            -a.
+        """
+        return float(operators.neg(a))
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
-        # TODO: Implement for Task 1.4.
-        raise NotImplementedError("Need to implement for Task 1.4")
+        """
+        Backprop for negation.
+
+        Args:
+            ctx: Context (unused).
+            d_output: Upstream gradient.
+
+        Returns:
+            -d_output.
+        """
+        # d/d(a) (-a) = -1
+        return -d_output
 
 
 class Sigmoid(ScalarFunction):
@@ -145,13 +211,37 @@ class Sigmoid(ScalarFunction):
 
     @staticmethod
     def forward(ctx: Context, a: float) -> float:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Compute sigmoid(a).
+
+        Saves the output s for an efficient backward pass.
+
+        Args:
+            ctx: Context used to save s.
+            a: Input value.
+
+        Returns:
+            sigmoid(a).
+        """
+        s = operators.sigmoid(a)
+        ctx.save_for_backward(s)
+        return float(s)
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
-        # TODO: Implement for Task 1.4.
-        raise NotImplementedError("Need to implement for Task 1.4")
+        """
+        Backprop for sigmoid.
+
+        Args:
+            ctx: Context containing saved output s = sigmoid(a).
+            d_output: Upstream gradient.
+
+        Returns:
+            d_output * s * (1 - s).
+        """
+        (s,) = ctx.saved_values
+        # d/d(a) σ(a) = σ(a) * (1 - σ(a))
+        return d_output * s * (1.0 - s)
 
 
 class ReLU(ScalarFunction):
@@ -159,13 +249,36 @@ class ReLU(ScalarFunction):
 
     @staticmethod
     def forward(ctx: Context, a: float) -> float:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Compute ReLU(a).
+
+        Saves a for the backward pass.
+
+        Args:
+            ctx: Context used to save a.
+            a: Input value.
+
+        Returns:
+            a if a > 0 else 0.0.
+        """
+        ctx.save_for_backward(a)
+        return float(operators.relu(a))
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
-        # TODO: Implement for Task 1.4.
-        raise NotImplementedError("Need to implement for Task 1.4")
+        """
+        Backprop for ReLU.
+
+        Args:
+            ctx: Context containing saved input a.
+            d_output: Upstream gradient.
+
+        Returns:
+            d_output if a > 0 else 0.0.
+        """
+        (a,) = ctx.saved_values
+        # d/d(a) ReLU(a) = 1 if a>0 else 0 -> relu_back(a, d)
+        return operators.relu_back(a, d_output)
 
 
 class Exp(ScalarFunction):
@@ -173,38 +286,124 @@ class Exp(ScalarFunction):
 
     @staticmethod
     def forward(ctx: Context, a: float) -> float:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Compute exp(a).
+
+        Saves the output e = exp(a) for the backward pass.
+
+        Args:
+            ctx: Context used to save e.
+            a: Input value.
+
+        Returns:
+            exp(a).
+        """
+        e = operators.exp(a)
+        ctx.save_for_backward(e)
+        return float(e)
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
-        # TODO: Implement for Task 1.4.
-        raise NotImplementedError("Need to implement for Task 1.4")
+        """
+        Backprop for exp.
+
+        Args:
+            ctx: Context containing saved forward output e = exp(a).
+            d_output: Upstream gradient.
+
+        Returns:
+            d_output * e.
+        """
+        (e,) = ctx.saved_values
+        # d/d(a) exp(a) = exp(a)
+        return d_output * e
 
 
 class LT(ScalarFunction):
-    "Less-than function $f(x) =$ 1.0 if x is less than y else 0.0"
+    """
+    Less-than comparison returning a float indicator.
+
+    f(x, y) = 1.0 if x < y else 0.0
+    """
 
     @staticmethod
     def forward(ctx: Context, a: float, b: float) -> float:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Compute 1.0 if a < b else 0.0.
+
+        Saves inputs for an approximate/backstop backward near a == b.
+
+        Args:
+            ctx: Context used to save (a, b).
+            a: Left operand.
+            b: Right operand.
+
+        Returns:
+            1.0 if a < b else 0.0.
+        """
+        ctx.save_for_backward(a, b)
+        return 1.0 if operators.lt(a, b) else 0.0
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, float]:
-        # TODO: Implement for Task 1.4.
-        raise NotImplementedError("Need to implement for Task 1.4")
+        """
+        Backprop for less-than.
+
+        Note:
+            The indicator is nondifferentiable; we return zeros almost
+            everywhere, and use a tiny symmetric finite-difference
+            approximation only when |a - b| is extremely small.
+
+        Args:
+            ctx: Context containing (a, b).
+            d_output: Upstream gradient.
+
+        Returns:
+            (d_da, d_db) as described above.
+        """
+        a, b = ctx.saved_values
+        eps = 1e-6  # тот же шаг, что в central_difference
+        if abs(a - b) < eps:
+            scale = 1.0 / (2.0 * eps)
+            return -d_output * scale, d_output * scale
+        return 0.0, 0.0
 
 
 class EQ(ScalarFunction):
-    "Equal function $f(x) =$ 1.0 if x is equal to y else 0.0"
+    """
+    Equality comparison returning a float indicator.
 
+    f(x, y) = 1.0 if x == y else 0.0
+    """
     @staticmethod
     def forward(ctx: Context, a: float, b: float) -> float:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Compute 1.0 if a == b else 0.0.
+
+        Args:
+            ctx: Context (unused).
+            a: Left operand.
+            b: Right operand.
+
+        Returns:
+            1.0 if a == b else 0.0.
+        """
+        return 1.0 if operators.eq(a, b) else 0.0
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, float]:
-        # TODO: Implement for Task 1.4.
-        raise NotImplementedError("Need to implement for Task 1.4")
+        """
+        Backprop for equality.
+
+        Note:
+            Equality is nondifferentiable almost everywhere for real inputs.
+            We return zeros.
+
+        Args:
+            ctx: Context (unused).
+            d_output: Upstream gradient.
+
+        Returns:
+            (0.0, 0.0).
+        """
+        return 0.0, 0.0

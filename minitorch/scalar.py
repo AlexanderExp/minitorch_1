@@ -92,31 +92,76 @@ class Scalar:
         return Mul.apply(b, Inv.apply(self))
 
     def __add__(self, b: ScalarLike) -> Scalar:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Add `b`.
+
+        Args:
+            b: Right operand.
+
+        Returns:
+            Result of self + b as a Scalar.
+        """
+        return Add.apply(self, b)
 
     def __bool__(self) -> bool:
         return bool(self.data)
 
     def __lt__(self, b: ScalarLike) -> Scalar:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Less-than comparison.
+
+        Args:
+            b: Right operand.
+
+        Returns:
+            `Scalar(1.0)` if `self < b`, else `Scalar(0.0)`.
+        """
+        return LT.apply(self, b)
 
     def __gt__(self, b: ScalarLike) -> Scalar:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Greater-than comparison.
+
+        Args:
+            b: Right operand.
+
+        Returns:
+            `Scalar(1.0)` if `self > b`, else `Scalar(0.0)`.
+        """
+        return LT.apply(b, self)
 
     def __eq__(self, b: ScalarLike) -> Scalar:  # type: ignore[override]
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Equality comparison.
+
+        Args:
+            b: Right operand.
+
+        Returns:
+            `Scalar(1.0)` if `self == b`, else `Scalar(0.0)`.
+        """
+        return EQ.apply(self, b)
 
     def __sub__(self, b: ScalarLike) -> Scalar:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Subtract `b`.
+
+        Args:
+            b: Right operand.
+
+        Returns:
+            Result of `self - b` as a `Scalar`.
+        """
+        return Add.apply(self, Neg.apply(b))
 
     def __neg__(self) -> Scalar:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Unary negation.
+
+        Returns:
+            Result of `-self` as a `Scalar`.
+        """
+        return Neg.apply(self)
 
     def __radd__(self, b: ScalarLike) -> Scalar:
         return self + b
@@ -125,20 +170,40 @@ class Scalar:
         return self * b
 
     def log(self) -> Scalar:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Natural logarithm.
+
+        Returns:
+            `Scalar(log(self))`.
+        """
+        return Log.apply(self)
 
     def exp(self) -> Scalar:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Exponential.
+
+        Returns:
+            `Scalar(exp(self))`.
+        """
+        return Exp.apply(self)
 
     def sigmoid(self) -> Scalar:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Logistic sigmoid.
+
+        Returns:
+            `Scalar(sigmoid(self))`.
+        """
+        return Sigmoid.apply(self)
 
     def relu(self) -> Scalar:
-        # TODO: Implement for Task 1.2.
-        raise NotImplementedError("Need to implement for Task 1.2")
+        """
+        Rectified Linear Unit.
+
+        Returns:
+            `Scalar(max(0, self))`.
+        """
+        return ReLU.apply(self)
 
     # Variable elements for backprop
 
@@ -168,13 +233,33 @@ class Scalar:
         return self.history.inputs
 
     def chain_rule(self, d_output: Any) -> Iterable[Tuple[Variable, Any]]:
+        """
+        Apply the chain rule at this node to propagate gradients to parents.
+
+        Uses the stored `last_fn` and `ctx` to compute local gradients and
+        pairs them with input variables, skipping constants.
+
+        Args:
+            d_output: Upstream gradient for this node's output.
+
+        Returns:
+            Iterable of (parent, grad_contribution) tuples.
+        """
         h = self.history
         assert h is not None
         assert h.last_fn is not None
         assert h.ctx is not None
 
-        # TODO: Implement for Task 1.3.
-        raise NotImplementedError("Need to implement for Task 1.3")
+        # Получаем локальные производные по каждому входу
+        local_grads = h.last_fn._backward(h.ctx, d_output)
+
+        # Сопоставляем их с входными переменными и
+        # отбрасываем константы, для которых градиенты не нужны
+        results: list[Tuple[Variable, Any]] = []
+        for var, grad in zip(h.inputs, local_grads):
+            if not var.is_constant():
+                results.append((var, grad))
+        return results
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """
